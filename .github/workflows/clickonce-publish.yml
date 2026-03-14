@@ -70,6 +70,13 @@ jobs:
             exit 1
           }
 
+      - name: ClickOnce 파일 줄바꿈 변환 방지 (.gitattributes)
+        shell: pwsh
+        run: |
+          $content = "# ClickOnce 배포 파일 - 모두 binary 처리`n* binary`n"
+          Set-Content -Path "bin\Release\app.publish\.gitattributes" `
+                      -Value $content -Encoding UTF8 -NoNewline
+
       - name: GitHub Pages 배포 (gh-pages 브랜치)
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -77,5 +84,5 @@ jobs:
           publish_branch: gh-pages
           publish_dir: bin/Release/app.publish
           destination_dir: .
-          force_orphan: false
+          force_orphan: true
           commit_message: "ClickOnce 배포 v${{ steps.version.outputs.APP_VERSION }} (run #${{ github.run_number }})"
