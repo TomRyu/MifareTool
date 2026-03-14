@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr:*)",
+      "Bash(winget install:*)",
+      "Bash(where gh:*)",
+      "Bash(find \"C:\\\\Users\\\\대흥정보\\\\Documents\\\\Visual Studio 2022\\\\MifareTool\" -type f -name \"*.csproj\" -o -name \"*.sln\" -o -name \"*.pubxml\" 2>/dev/null | head -20)"
+    ]
+  }
+}

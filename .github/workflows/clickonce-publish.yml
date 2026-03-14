@@ -1,0 +1,80 @@
+name: ClickOnce 배포
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:          # GitHub Actions 탭에서 수동 실행 가능
+
+permissions:
+  contents: write             # gh-pages 브랜치 푸시 권한
+
+jobs:
+  publish:
+    runs-on: windows-latest
+
+    steps:
+      - name: 소스 체크아웃
+        uses: actions/checkout@v4
+
+      - name: MSBuild 설정
+        uses: microsoft/setup-msbuild@v2
+
+      - name: NuGet 설정
+        uses: NuGet/setup-nuget@v2
+
+      - name: NuGet 패키지 복원
+        run: nuget restore MifareTool.sln
+
+      - name: 버전 계산 (AssemblyInfo 기준 + 빌드번호)
+        id: version
+        shell: pwsh
+        run: |
+          $raw = Select-String -Path "Properties\AssemblyInfo.cs" `
+                   -Pattern 'AssemblyVersion\("([^"]+)"\)' |
+                 ForEach-Object { $_.Matches[0].Groups[1].Value }
+          # 1.0.0.15 → 1.0.0, 빌드번호는 run_number로 대체
+          $base = ($raw -split '\.')[0..2] -join '.'
+          $ver  = "$base.${{ github.run_number }}"
+          echo "APP_VERSION=$ver" >> $env:GITHUB_OUTPUT
+          Write-Host "배포 버전: $ver"
+
+      - name: ClickOnce 빌드 및 게시
+        shell: pwsh
+        run: |
+          msbuild MifareTool.csproj `
+            /target:Publish `
+            /p:Configuration=Release `
+            /p:Platform=AnyCPU `
+            /p:PublishUrl="publish\" `
+            /p:InstallUrl="https://TomRyu.github.io/MifareTool/" `
+            /p:InstallFrom=Web `
+            /p:UpdateEnabled=true `
+            /p:UpdateMode=Foreground `
+            /p:UpdateInterval=1 `
+            /p:UpdateIntervalUnits=Days `
+            /p:MapFileExtensions=true `
+            /p:ApplicationVersion="${{ steps.version.outputs.APP_VERSION }}" `
+            /p:IsWebBootstrapper=true `
+            /p:BootstrapperEnabled=true `
+            /p:SignManifests=false
+
+      - name: 게시 폴더 확인
+        shell: pwsh
+        run: |
+          $dir = "bin\Release\app.publish"
+          if (Test-Path $dir) {
+            Write-Host "게시 완료 - 파일 목록:"
+            Get-ChildItem $dir -Recurse | Select-Object FullName
+          } else {
+            Write-Error "게시 폴더를 찾을 수 없습니다: $dir"
+            exit 1
+          }
+
+      - name: GitHub Pages 배포 (gh-pages 브랜치)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: bin/Release/app.publish
+          destination_dir: .
+          force_orphan: false
+          commit_message: "ClickOnce 배포 v${{ steps.version.outputs.APP_VERSION }} (run #${{ github.run_number }})"
