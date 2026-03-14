@@ -45,7 +45,7 @@ jobs:
             /target:Publish `
             /p:Configuration=Release `
             /p:Platform=AnyCPU `
-            /p:DefineConstants="TRACE;MANAGER_MODE" `
+            /p:DefineConstants="TRACE%3BMANAGER_MODE" `
             /p:PublishUrl="publish\manager\" `
             /p:InstallUrl="https://TomRyu.github.io/MifareTool/manager/" `
             /p:InstallFrom=Web `
