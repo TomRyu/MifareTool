@@ -3,10 +3,10 @@ name: ClickOnce 배포
 on:
   push:
     branches: [ master ]
-  workflow_dispatch:          # GitHub Actions 탭에서 수동 실행 가능
+  workflow_dispatch:
 
 permissions:
-  contents: write             # gh-pages 브랜치 푸시 권한
+  contents: write
 
 jobs:
   publish:
@@ -25,28 +25,29 @@ jobs:
       - name: NuGet 패키지 복원
         run: nuget restore MifareTool.sln
 
-      - name: 버전 계산 (AssemblyInfo 기준 + 빌드번호)
+      - name: 버전 계산
         id: version
         shell: pwsh
         run: |
           $raw = Select-String -Path "Properties\AssemblyInfo.cs" `
                    -Pattern 'AssemblyVersion\("([^"]+)"\)' |
                  ForEach-Object { $_.Matches[0].Groups[1].Value }
-          # 1.0.0.15 → 1.0.0, 빌드번호는 run_number로 대체
           $base = ($raw -split '\.')[0..2] -join '.'
           $ver  = "$base.${{ github.run_number }}"
           echo "APP_VERSION=$ver" >> $env:GITHUB_OUTPUT
           Write-Host "배포 버전: $ver"
 
-      - name: ClickOnce 빌드 및 게시
+      # ── 관리자용 빌드 ────────────────────────────────────────────
+      - name: "[Manager] ClickOnce 빌드"
         shell: pwsh
         run: |
           msbuild MifareTool.csproj `
             /target:Publish `
             /p:Configuration=Release `
             /p:Platform=AnyCPU `
-            /p:PublishUrl="publish\" `
-            /p:InstallUrl="https://TomRyu.github.io/MifareTool/" `
+            /p:DefineConstants="TRACE;MANAGER_MODE" `
+            /p:PublishUrl="publish\manager\" `
+            /p:InstallUrl="https://TomRyu.github.io/MifareTool/manager/" `
             /p:InstallFrom=Web `
             /p:UpdateEnabled=true `
             /p:UpdateMode=Foreground `
@@ -58,31 +59,63 @@ jobs:
             /p:BootstrapperEnabled=true `
             /p:SignManifests=false
 
-      - name: 게시 폴더 확인
+      - name: "[Manager] 출력 폴더 이동"
         shell: pwsh
         run: |
-          $dir = "bin\Release\app.publish"
-          if (Test-Path $dir) {
-            Write-Host "게시 완료 - 파일 목록:"
-            Get-ChildItem $dir -Recurse | Select-Object FullName
-          } else {
-            Write-Error "게시 폴더를 찾을 수 없습니다: $dir"
-            exit 1
-          }
+          New-Item -ItemType Directory -Force -Path "publish-all\manager"
+          Copy-Item -Recurse -Force "bin\Release\app.publish\*" "publish-all\manager\"
 
-      - name: ClickOnce 파일 줄바꿈 변환 방지 (.gitattributes)
+      # ── 고객용 빌드 ──────────────────────────────────────────────
+      - name: "[Guest] ClickOnce 빌드"
+        shell: pwsh
+        run: |
+          # 이전 빌드 산출물 정리
+          Remove-Item -Recurse -Force "bin\Release\app.publish" -ErrorAction SilentlyContinue
+
+          msbuild MifareTool.csproj `
+            /target:Publish `
+            /p:Configuration=Release `
+            /p:Platform=AnyCPU `
+            /p:DefineConstants="TRACE" `
+            /p:ApplicationIcon=cardguest.ico `
+            /p:PublishUrl="publish\guest\" `
+            /p:InstallUrl="https://TomRyu.github.io/MifareTool/guest/" `
+            /p:InstallFrom=Web `
+            /p:UpdateEnabled=true `
+            /p:UpdateMode=Foreground `
+            /p:UpdateInterval=1 `
+            /p:UpdateIntervalUnits=Days `
+            /p:MapFileExtensions=true `
+            /p:ApplicationVersion="${{ steps.version.outputs.APP_VERSION }}" `
+            /p:IsWebBootstrapper=true `
+            /p:BootstrapperEnabled=true `
+            /p:SignManifests=false
+
+      - name: "[Guest] 출력 폴더 이동"
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "publish-all\guest"
+          Copy-Item -Recurse -Force "bin\Release\app.publish\*" "publish-all\guest\"
+
+      # ── 공통 처리 ─────────────────────────────────────────────────
+      - name: "줄바꿈 변환 방지 (.gitattributes)"
         shell: pwsh
         run: |
           $content = "# ClickOnce 배포 파일 - 모두 binary 처리`n* binary`n"
-          Set-Content -Path "bin\Release\app.publish\.gitattributes" `
+          Set-Content -Path "publish-all\.gitattributes" `
                       -Value $content -Encoding UTF8 -NoNewline
 
-      - name: GitHub Pages 배포 (gh-pages 브랜치)
+      - name: "배포 폴더 구조 확인"
+        shell: pwsh
+        run: |
+          Get-ChildItem "publish-all" -Recurse | Select-Object FullName
+
+      - name: "GitHub Pages 배포"
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: bin/Release/app.publish
+          publish_dir: publish-all
           destination_dir: .
           force_orphan: true
           commit_message: "ClickOnce 배포 v${{ steps.version.outputs.APP_VERSION }} (run #${{ github.run_number }})"

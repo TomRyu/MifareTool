@@ -43,6 +43,12 @@ namespace MifareTool
             tbRoomNum1.Text = tbRoomNum2.Text = tbRoomNum3.Text = "00";
             tbSysID1.Text = tbSysID2.Text = tbSysID3.Text = tbSysID4.Text = tbSysID5.Text = "FF";
 
+#if !MANAGER_MODE
+            string _guestIconPath = System.IO.Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, "cardguest.ico");
+            if (System.IO.File.Exists(_guestIconPath))
+                this.Icon = new System.Drawing.Icon(_guestIconPath);
+#endif
             tsLabelPGMMode.Text = G.pGMMode == PGMMode.Manager ? "관리자용" : "고객용";
             if(G.pGMMode == PGMMode.Guest)
             {

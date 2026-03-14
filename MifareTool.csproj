@@ -41,7 +41,7 @@
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
-    <InstallUrl>https://TomRyu.github.io/MifareTool/</InstallUrl>
+    <InstallUrl>https://TomRyu.github.io/MifareTool/manager/</InstallUrl>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateMode>Foreground</UpdateMode>
     <UpdateInterval>1</UpdateInterval>
@@ -223,7 +223,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Content Include="cardguest.ico" />
+    <Content Include="cardguest.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Fonts\NanumGothic.otf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

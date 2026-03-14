@@ -40,7 +40,11 @@ namespace MifareTool
         // RF : 2번섹터 1번블록, 15번섹터 2번블록
         // RF : 2번섹터 0번블록, 15번섹터 1번블록 ... 이게 맞음
         public static int nCardSector = 0, nCardBlock = 0, nCardSector2 = 15, nCardBlock2 = 1;
+#if MANAGER_MODE
         public static PGMMode pGMMode = PGMMode.Manager;
+#else
+        public static PGMMode pGMMode = PGMMode.Guest;
+#endif
 
         #region 라이센스 생성 관련
         public static bool VerifyLicense(string licenseDatPath = @".\license.dat", bool bTest = false)
