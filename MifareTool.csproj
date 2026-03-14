@@ -28,14 +28,13 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;고객 모드:   TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>card.ico</ApplicationIcon>
   </PropertyGroup>
-
   <!-- ClickOnce 배포 설정 (로컬 기본값 / CI에서 MSBuild 파라미터로 덮어씀) -->
   <PropertyGroup>
     <PublishUrl>publish\</PublishUrl>

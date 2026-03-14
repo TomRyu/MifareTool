@@ -53,7 +53,7 @@ namespace MifareTool
             if(G.pGMMode == PGMMode.Guest)
             {
                 tsBtnSettings.Visible = tsBtnInfo.Visible = false;
-                if (!G.VerifyLicense())
+                if (!G.VerifyLicense(@"C:\TheMR\MifareTool\Guest\license.dat"))
                 {
                     throw new Exception("LICENSE_FAIL");
                 }
