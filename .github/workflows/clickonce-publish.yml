@@ -47,7 +47,7 @@ jobs:
             /p:Platform=AnyCPU `
             /p:DefineConstants="TRACE%3BMANAGER_MODE" `
             /p:AssemblyName=MifareTool `
-            /p:ProductName="MifareTool 관리자" `
+            /p:ProductName="TheMR관리자" `
             /p:PublishUrl="publish\manager\" `
             /p:InstallUrl="https://TomRyu.github.io/MifareTool/manager/" `
             /p:InstallFrom=Web `
@@ -80,7 +80,7 @@ jobs:
             /p:Platform=AnyCPU `
             /p:DefineConstants="TRACE" `
             /p:AssemblyName=MifareTool_Guest `
-            /p:ProductName="MifareTool 고객" `
+            /p:ProductName="TheMR고객" `
             /p:ApplicationIcon=cardguest.ico `
             /p:PublishUrl="publish\guest\" `
             /p:InstallUrl="https://TomRyu.github.io/MifareTool/guest/" `
