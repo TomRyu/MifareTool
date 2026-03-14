@@ -214,9 +214,6 @@ namespace MifareTool
         }
         private void btnReadCard_Click(object sender, EventArgs e)
         {
-            if (!Reconnect())
-                return;
-
             ReadCard();
         }
         private void btnWriteCard_Click(object sender, EventArgs e)
@@ -366,6 +363,9 @@ namespace MifareTool
                     Log("먼저 Connect 하세요.");
                     return;
                 }
+
+                if (!Reconnect())
+                    return;
 
                 // (1) 카드 UID 읽기 (ACR122U Control APDU: FF CA 00 00 00)
                 var uid = TransmitApdu(new byte[] { 0xFF, 0xCA, 0x00, 0x00, 0x00 });

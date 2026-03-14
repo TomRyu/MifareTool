@@ -708,15 +708,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:(주)더엠알 카드생성기-관리자용"
-        "ProductCode" = "8:{1EC274F7-C115-4585-B85B-191C82C0D24E}"
-        "PackageCode" = "8:{FB91049D-CC9F-4CD4-BE0E-DA47DE72330B}"
+        "ProductCode" = "8:{45E84371-5118-4A7C-A84D-11F7ABD3603D}"
+        "PackageCode" = "8:{A49925B2-6262-44D9-82C6-C572188CA943}"
         "UpgradeCode" = "8:{60D69EC9-1612-4B59-9C89-28AE4DADBE3F}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.15"
+        "ProductVersion" = "8:1.0.17"
         "Manufacturer" = "8:(주)더엠알"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1244,7 +1244,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_1F18EA22BF8C40AEBDB0A0BC5AF262A9"
             {
-            "SourcePath" = "8:..\\obj\\Debug\\MifareTool.exe"
+            "SourcePath" = "8:..\\obj\\Release\\MifareTool.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_A72898F1BF724D8599D2BD9889C2B42B"
