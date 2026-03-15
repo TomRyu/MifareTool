@@ -475,6 +475,9 @@ namespace MifareTool
                     return;
                 }
 
+                if (!Reconnect())
+                    return;
+
                 // (1) 카드 UID 읽기 (ACR122U Control APDU: FF CA 00 00 00)
                 var uid = TransmitApdu(new byte[] { 0xFF, 0xCA, 0x00, 0x00, 0x00 });
                 if (!uid.success)
@@ -799,6 +802,7 @@ namespace MifareTool
 
             _monitor.CardRemoved += (s, e) => BeginInvoke(new Action(() =>
             {
+                lblResult.Text = "";
                 Log($"[EVENT] Card가 리더기에서 제거됐습니다.: {e.ReaderName}");
             }));
 
@@ -1176,9 +1180,6 @@ namespace MifareTool
 
         private void btnReadCard2_Click(object sender, EventArgs e)
         {
-            if (!Reconnect())
-                return;
-
             ReadCard2();
         }
 
