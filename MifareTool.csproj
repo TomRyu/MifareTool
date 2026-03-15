@@ -24,11 +24,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>ARM64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;관리자 모드: TRACE;MANAGER_MODE</DefineConstants>
+    <DefineConstants>TRACE;고객 모드:   TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -167,6 +167,12 @@
     <Compile Include="Forms\FormInfo.designer.cs">
       <DependentUpon>FormInfo.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\FormLogViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\FormLogViewer.Designer.cs">
+      <DependentUpon>FormLogViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\FormPCInfo.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -202,6 +208,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\FormInfo.resx">
       <DependentUpon>FormInfo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\FormLogViewer.resx">
+      <DependentUpon>FormLogViewer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\FormPCInfo.resx">
       <DependentUpon>FormPCInfo.cs</DependentUpon>

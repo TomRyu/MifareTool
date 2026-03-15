@@ -26,11 +26,19 @@ namespace MifareTool
         private TabPage _tabRF;
         private TabPage _tabWiFi;
         private int _issueCount = 0;
+        private ImageList _tabImageList;
 
         #region Form 이벤트
         public FormMain()
         {
             InitializeComponent();
+
+            _tabImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit, ImageSize = new Size(20, 20) };
+            _tabImageList.Images.Add(Properties.Resources.rfid);
+            _tabImageList.Images.Add(Properties.Resources.wifi);
+            tabControl1.ImageList = _tabImageList;
+            tabControl1.TabPages[0].ImageIndex = 0;
+            tabControl1.TabPages[1].ImageIndex = 1;
 
             TextBoxHexHelper.AttachHexOnly_Force2Digits(tbRoomNum1, autoInsertSpace: false);
             TextBoxHexHelper.AttachHexOnly_Force2Digits(tbRoomNum2, autoInsertSpace: false);
@@ -123,7 +131,7 @@ namespace MifareTool
         }
         private void FormMain_Load(object sender, EventArgs e)
         {
-            mifareDumpView1.FontScale = 0.8f;
+            mifareDumpView1.FontScale = 0.6f;
         }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -835,6 +843,16 @@ namespace MifareTool
         private void Log(string msg)
         {
             txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {msg}{Environment.NewLine}");
+        }
+
+        private void txtLog_DoubleClick(object sender, EventArgs e)
+        {
+            using (var dlg = new FormLogViewer(txtLog.Text))
+            {
+                dlg.ShowDialog(this);
+                if (dlg.LogCleared)
+                    txtLog.Clear();
+            }
         }
         // Hex 문자열(예: "0A1B...") -> byte[]
         private static byte[] HexToBytes(string hex)
