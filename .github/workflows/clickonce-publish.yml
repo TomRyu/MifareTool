@@ -37,30 +37,78 @@ jobs:
           echo "APP_VERSION=$ver" >> $env:GITHUB_OUTPUT
           Write-Host "배포 버전: $ver"
 
+      # ── 코드 서명 인증서 설치 ──────────────────────────────────────
+      # GitHub Secrets 에 아래 두 항목을 등록하면 자동으로 서명됩니다.
+      #   SIGNING_CERT_BASE64  : PFX 파일을 Base64 인코딩한 문자열
+      #   SIGNING_CERT_PASSWORD: PFX 파일의 암호
+      - name: 코드 서명 인증서 설치
+        id: cert
+        shell: pwsh
+        env:
+          SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:SIGNING_CERT_BASE64)) {
+            Write-Host "⚠️  서명 인증서(Secret) 없음 - 서명 없이 빌드합니다."
+            echo "THUMBPRINT=" >> $env:GITHUB_OUTPUT
+          } else {
+            $pfxPath = Join-Path $env:TEMP "signing.pfx"
+            [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:SIGNING_CERT_BASE64))
+            $secPwd = ConvertTo-SecureString $env:SIGNING_CERT_PASSWORD -AsPlainText -Force
+            $cert = Import-PfxCertificate -FilePath $pfxPath `
+                      -CertStoreLocation Cert:\CurrentUser\My -Password $secPwd
+            Write-Host "✅ 인증서 설치 완료: $($cert.Subject)"
+            echo "THUMBPRINT=$($cert.Thumbprint)" >> $env:GITHUB_OUTPUT
+            Remove-Item $pfxPath -Force
+          }
+
       # ── 관리자용 빌드 ────────────────────────────────────────────
       - name: "[Manager] ClickOnce 빌드"
         shell: pwsh
         run: |
-          msbuild MifareTool.csproj `
-            /target:Publish `
-            /p:Configuration=Release `
-            /p:Platform=AnyCPU `
-            /p:DefineConstants="TRACE%3BMANAGER_MODE" `
-            /p:AssemblyName=MifareTool `
-            /p:ProductName="TheMR관리자" `
-            /p:CreateDesktopShortcut=true `
-            /p:PublishUrl="publish\manager\" `
-            /p:InstallUrl="https://TomRyu.github.io/MifareTool/manager/" `
-            /p:InstallFrom=Web `
-            /p:UpdateEnabled=true `
-            /p:UpdateMode=Foreground `
-            /p:UpdateInterval=1 `
-            /p:UpdateIntervalUnits=Days `
-            /p:MapFileExtensions=true `
-            /p:ApplicationVersion="${{ steps.version.outputs.APP_VERSION }}" `
-            /p:IsWebBootstrapper=true `
-            /p:BootstrapperEnabled=true `
-            /p:SignManifests=false
+          $thumbprint = "${{ steps.cert.outputs.THUMBPRINT }}"
+          $msbuildArgs = @(
+            "MifareTool.csproj",
+            "/target:Publish",
+            "/p:Configuration=Release",
+            "/p:Platform=AnyCPU",
+            "/p:DefineConstants=TRACE%3BMANAGER_MODE",
+            "/p:AssemblyName=MifareTool",
+            "/p:ProductName=TheMR관리자",
+            "/p:CreateDesktopShortcut=true",
+            "/p:PublishUrl=publish\manager\",
+            "/p:InstallUrl=https://TomRyu.github.io/MifareTool/manager/",
+            "/p:InstallFrom=Web",
+            "/p:UpdateEnabled=true",
+            "/p:UpdateMode=Foreground",
+            "/p:UpdateInterval=1",
+            "/p:UpdateIntervalUnits=Days",
+            "/p:MapFileExtensions=true",
+            "/p:ApplicationVersion=${{ steps.version.outputs.APP_VERSION }}",
+            "/p:IsWebBootstrapper=true",
+            "/p:BootstrapperEnabled=true"
+          )
+          if ($thumbprint) {
+            $msbuildArgs += "/p:SignManifests=true"
+            $msbuildArgs += "/p:ManifestCertificateThumbprint=$thumbprint"
+            $msbuildArgs += "/p:ManifestTimestampUrl=http://timestamp.digicert.com"
+          } else {
+            $msbuildArgs += "/p:SignManifests=false"
+          }
+          & msbuild @msbuildArgs
+
+      - name: "[Manager] setup.exe 서명"
+        if: steps.cert.outputs.THUMBPRINT != ''
+        shell: pwsh
+        run: |
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" `
+                        -Recurse -Filter signtool.exe |
+                      Where-Object { $_.FullName -match "x64" } |
+                      Select-Object -Last 1 -ExpandProperty FullName
+          & $signtool sign `
+            /sha1 "${{ steps.cert.outputs.THUMBPRINT }}" `
+            /tr http://timestamp.digicert.com /td sha256 /fd sha256 `
+            "bin\Release\app.publish\setup.exe"
 
       - name: "[Manager] 출력 폴더 이동"
         shell: pwsh
@@ -72,30 +120,52 @@ jobs:
       - name: "[Guest] ClickOnce 빌드"
         shell: pwsh
         run: |
-          # 이전 빌드 산출물 정리
           Remove-Item -Recurse -Force "bin\Release\app.publish" -ErrorAction SilentlyContinue
 
-          msbuild MifareTool.csproj `
-            /target:Publish `
-            /p:Configuration=Release `
-            /p:Platform=AnyCPU `
-            /p:DefineConstants="TRACE" `
-            /p:AssemblyName=MifareTool_Guest `
-            /p:ProductName="TheMR고객" `
-            /p:CreateDesktopShortcut=true `
-            /p:ApplicationIcon=cardguest.ico `
-            /p:PublishUrl="publish\guest\" `
-            /p:InstallUrl="https://TomRyu.github.io/MifareTool/guest/" `
-            /p:InstallFrom=Web `
-            /p:UpdateEnabled=true `
-            /p:UpdateMode=Foreground `
-            /p:UpdateInterval=1 `
-            /p:UpdateIntervalUnits=Days `
-            /p:MapFileExtensions=true `
-            /p:ApplicationVersion="${{ steps.version.outputs.APP_VERSION }}" `
-            /p:IsWebBootstrapper=true `
-            /p:BootstrapperEnabled=true `
-            /p:SignManifests=false
+          $thumbprint = "${{ steps.cert.outputs.THUMBPRINT }}"
+          $msbuildArgs = @(
+            "MifareTool.csproj",
+            "/target:Publish",
+            "/p:Configuration=Release",
+            "/p:Platform=AnyCPU",
+            "/p:DefineConstants=TRACE",
+            "/p:AssemblyName=MifareTool_Guest",
+            "/p:ProductName=TheMR고객",
+            "/p:CreateDesktopShortcut=true",
+            "/p:ApplicationIcon=cardguest.ico",
+            "/p:PublishUrl=publish\guest\",
+            "/p:InstallUrl=https://TomRyu.github.io/MifareTool/guest/",
+            "/p:InstallFrom=Web",
+            "/p:UpdateEnabled=true",
+            "/p:UpdateMode=Foreground",
+            "/p:UpdateInterval=1",
+            "/p:UpdateIntervalUnits=Days",
+            "/p:MapFileExtensions=true",
+            "/p:ApplicationVersion=${{ steps.version.outputs.APP_VERSION }}",
+            "/p:IsWebBootstrapper=true",
+            "/p:BootstrapperEnabled=true"
+          )
+          if ($thumbprint) {
+            $msbuildArgs += "/p:SignManifests=true"
+            $msbuildArgs += "/p:ManifestCertificateThumbprint=$thumbprint"
+            $msbuildArgs += "/p:ManifestTimestampUrl=http://timestamp.digicert.com"
+          } else {
+            $msbuildArgs += "/p:SignManifests=false"
+          }
+          & msbuild @msbuildArgs
+
+      - name: "[Guest] setup.exe 서명"
+        if: steps.cert.outputs.THUMBPRINT != ''
+        shell: pwsh
+        run: |
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" `
+                        -Recurse -Filter signtool.exe |
+                      Where-Object { $_.FullName -match "x64" } |
+                      Select-Object -Last 1 -ExpandProperty FullName
+          & $signtool sign `
+            /sha1 "${{ steps.cert.outputs.THUMBPRINT }}" `
+            /tr http://timestamp.digicert.com /td sha256 /fd sha256 `
+            "bin\Release\app.publish\setup.exe"
 
       - name: "[Guest] 출력 폴더 이동"
         shell: pwsh
