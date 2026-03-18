@@ -12,7 +12,7 @@ using System.Windows.Forms;
 namespace MifareTool
 {
     public partial class FormMain : Form
-    {
+    { 
         private ISCardContext _context;
         private ISCardReader _reader;
         private SCardProtocol _activeProtocol;
