@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write  # SignPath.io OIDC 인증에 필요
 
 jobs:
   publish:
@@ -63,35 +62,6 @@ jobs:
             /p:BootstrapperEnabled=true `
             /p:SignManifests=false
 
-      - name: "[Manager] setup.exe 업로드 (서명 전)"
-        uses: actions/upload-artifact@v4
-        with:
-          name: manager-setup-unsigned
-          path: bin\Release\app.publish\setup.exe
-
-      - name: "[Manager] setup.exe SignPath.io 서명"
-        uses: SignPath/github-action-submit-signing-request@v1.1
-        with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: '${{ vars.SIGNPATH_ORG_ID }}'
-          project-slug: 'MifareTool'
-          signing-policy-slug: 'release-signing'
-          artifact-configuration-slug: 'exe-signing'
-          github-artifact-id: 'manager-setup-unsigned'
-          output-artifact-name: 'manager-setup-signed'
-          wait-for-completion: true
-
-      - name: "[Manager] 서명된 setup.exe 다운로드"
-        uses: actions/download-artifact@v4
-        with:
-          name: manager-setup-signed
-          path: manager-signed
-
-      - name: "[Manager] 서명된 setup.exe 교체"
-        shell: pwsh
-        run: |
-          Copy-Item -Force "manager-signed\setup.exe" "bin\Release\app.publish\setup.exe"
-
       - name: "[Manager] 출력 폴더 이동"
         shell: pwsh
         run: |
@@ -125,35 +95,6 @@ jobs:
             /p:IsWebBootstrapper=true `
             /p:BootstrapperEnabled=true `
             /p:SignManifests=false
-
-      - name: "[Guest] setup.exe 업로드 (서명 전)"
-        uses: actions/upload-artifact@v4
-        with:
-          name: guest-setup-unsigned
-          path: bin\Release\app.publish\setup.exe
-
-      - name: "[Guest] setup.exe SignPath.io 서명"
-        uses: SignPath/github-action-submit-signing-request@v1.1
-        with:
-          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
-          organization-id: '${{ vars.SIGNPATH_ORG_ID }}'
-          project-slug: 'MifareTool'
-          signing-policy-slug: 'release-signing'
-          artifact-configuration-slug: 'exe-signing'
-          github-artifact-id: 'guest-setup-unsigned'
-          output-artifact-name: 'guest-setup-signed'
-          wait-for-completion: true
-
-      - name: "[Guest] 서명된 setup.exe 다운로드"
-        uses: actions/download-artifact@v4
-        with:
-          name: guest-setup-signed
-          path: guest-signed
-
-      - name: "[Guest] 서명된 setup.exe 교체"
-        shell: pwsh
-        run: |
-          Copy-Item -Force "guest-signed\setup.exe" "bin\Release\app.publish\setup.exe"
 
       - name: "[Guest] 출력 폴더 이동"
         shell: pwsh
