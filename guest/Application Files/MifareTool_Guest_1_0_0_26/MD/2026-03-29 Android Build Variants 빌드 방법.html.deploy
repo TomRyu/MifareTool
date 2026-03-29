@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android Build Variants 빌드 방법</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; background: #1e1e1e; color: #d4d4d4; margin: 40px; line-height: 1.8; }
+  h1 { color: #4ec9b0; border-bottom: 2px solid #4ec9b0; padding-bottom: 8px; }
+  h3 { color: #9cdcfe; margin-top: 28px; }
+  code { background: #2d2d2d; color: #ce9178; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; }
+  pre { background: #2d2d2d; color: #ce9178; padding: 16px; border-radius: 6px; font-family: Consolas, monospace; font-size: 0.95em; }
+  ul { padding-left: 24px; }
+  li { margin: 4px 0; }
+  .note { background: #2d3a2d; border-left: 4px solid #4ec9b0; padding: 10px 16px; border-radius: 4px; margin-top: 20px; }
+  .step { background: #252526; border-left: 4px solid #569cd6; padding: 10px 16px; border-radius: 4px; margin: 12px 0; }
+  .date { color: #888; font-size: 0.9em; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<h1>Android Studio — Build Variants 선택 및 APK 빌드</h1>
+<p class="date">작성일: 2026-03-29</p>
+
+<h3>1. Build Variant 선택</h3>
+<div class="step">
+  <ul>
+    <li>좌하단 <strong>Build Variants</strong> 탭 클릭</li>
+    <li><code>app</code> 행에서 원하는 변형 선택</li>
+    <ul>
+      <li><code>guestDebug</code> / <code>guestRelease</code></li>
+      <li><code>managerDebug</code> / <code>managerRelease</code></li>
+    </ul>
+  </ul>
+</div>
+
+<h3>2. APK 빌드</h3>
+<div class="step">
+  상단 메뉴: <strong>Build → Generate App Bundles or APKs → Generate APKs</strong>
+  <br><br>
+  빠른 빌드 단축키: <code>Ctrl+F9</code> (APK 파일 생성 없이 컴파일만)
+</div>
+
+<h3>3. APK 파일 위치</h3>
+<div class="step">
+  빌드 완료 후 우하단에 <strong>"locate"</strong> 링크 클릭 시 탐색기 열림.
+  <br><br>
+  경로:
+  <pre>app/build/outputs/apk/guest/debug/app-guest-debug.apk
+app/build/outputs/apk/manager/debug/app-manager-debug.apk</pre>
+</div>
+
+<h3>참고</h3>
+<div class="note">
+  <ul>
+    <li><strong>Debug APK</strong>: 서명 없이 바로 설치 가능 (테스트용)</li>
+    <li><strong>Release APK</strong>: 서명 키 필요 — <strong>Build → Generate Signed Bundle / APK</strong></li>
+  </ul>
+</div>
+
+</body>
+</html>

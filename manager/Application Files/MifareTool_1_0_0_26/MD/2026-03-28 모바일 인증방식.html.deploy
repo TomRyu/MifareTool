@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>모바일 라이선스 인증 방식 — 2026-03-28</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+      background: #f5f7fa;
+      color: #1a1a2e;
+      padding: 40px 20px;
+      line-height: 1.7;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+    h1 {
+      font-size: 1.8rem;
+      color: #1a1a2e;
+      border-left: 5px solid #4f8ef7;
+      padding-left: 14px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: #888;
+      margin-bottom: 36px;
+      padding-left: 19px;
+    }
+    h2 {
+      font-size: 1.2rem;
+      color: #2c3e6b;
+      margin: 36px 0 14px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #e0e6f0;
+    }
+    h3 {
+      font-size: 1rem;
+      color: #3a5a9b;
+      margin: 24px 0 10px;
+    }
+    p { margin-bottom: 10px; }
+
+    /* 전체 흐름 다이어그램 */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 20px 0;
+    }
+    .flow-row {
+      display: grid;
+      grid-template-columns: 1fr 40px 1fr;
+      align-items: center;
+      gap: 0;
+    }
+    .flow-box {
+      background: #fff;
+      border: 1.5px solid #c5d4f0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.92rem;
+    }
+    .flow-box.user  { border-color: #4f8ef7; }
+    .flow-box.admin { border-color: #f7a04f; }
+    .flow-box .role {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .flow-box.user  .role { color: #4f8ef7; }
+    .flow-box.admin .role { color: #f7a04f; }
+    .flow-arrow {
+      text-align: center;
+      font-size: 1.4rem;
+      color: #aab8d8;
+    }
+    .flow-connector {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: center;
+      padding: 6px 0;
+      color: #aab8d8;
+      font-size: 1.2rem;
+    }
+
+    /* 단계별 카드 */
+    .step-card {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e0e6f0;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .step-num {
+      display: inline-block;
+      background: #4f8ef7;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: bold;
+      border-radius: 20px;
+      padding: 2px 12px;
+      margin-bottom: 10px;
+    }
+    .step-card.admin .step-num { background: #f7a04f; }
+
+    /* 화면 목업 */
+    .mock {
+      background: #1e2235;
+      color: #c8d8ff;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.88rem;
+      margin: 12px 0;
+      white-space: pre;
+      line-height: 1.6;
+    }
+
+    /* JSON 코드 */
+    pre {
+      background: #1e2235;
+      color: #a8c8ff;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.87rem;
+      overflow-x: auto;
+      margin: 12px 0;
+      line-height: 1.6;
+    }
+    .json-key   { color: #79b8ff; }
+    .json-str   { color: #9ecbff; }
+    .json-num   { color: #f8c555; }
+
+    /* 테이블 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 0.92rem;
+    }
+    th {
+      background: #eef2fb;
+      color: #2c3e6b;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 2px solid #c5d4f0;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #e8edf8;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f7f9fe; }
+
+    /* 검증 체크 */
+    .check-list {
+      list-style: none;
+      margin: 12px 0;
+      padding: 0;
+    }
+    .check-list li {
+      padding: 8px 14px;
+      background: #f0f7ff;
+      border-left: 4px solid #4f8ef7;
+      margin-bottom: 8px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .check-list li::before {
+      content: "✓ ";
+      color: #4f8ef7;
+      font-weight: bold;
+    }
+
+    /* 요약 박스 */
+    .summary {
+      background: #fff8f0;
+      border: 1.5px solid #f7a04f;
+      border-radius: 10px;
+      padding: 18px 24px;
+      margin-top: 32px;
+      font-size: 0.95rem;
+    }
+    .summary h2 {
+      border-bottom-color: #f7a04f;
+      color: #b36b00;
+      margin-top: 0;
+    }
+    .summary-flow {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+    .sf-item {
+      background: #fff;
+      border: 1px solid #f0c87a;
+      border-radius: 20px;
+      padding: 6px 16px;
+      color: #7a4800;
+    }
+    .sf-arrow { color: #f7a04f; font-size: 1.2rem; }
+
+    /* Q&A 섹션 */
+    .qa-block {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e0e6f0;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .qa-q {
+      background: #eef2fb;
+      padding: 14px 20px;
+      font-weight: bold;
+      color: #2c3e6b;
+      font-size: 0.95rem;
+      border-left: 4px solid #4f8ef7;
+    }
+    .qa-q::before { content: "Q. "; color: #4f8ef7; }
+    .qa-a {
+      padding: 16px 20px;
+      font-size: 0.92rem;
+    }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 12px 0;
+    }
+    .compare-box {
+      background: #f7f9fe;
+      border-radius: 8px;
+      padding: 14px 16px;
+      border: 1px solid #e0e6f0;
+    }
+    .compare-box .cb-label {
+      font-size: 0.78rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #4f8ef7;
+      margin-bottom: 6px;
+    }
+    .compare-box.mobile .cb-label { color: #34a853; }
+    .compare-box dt {
+      font-size: 0.82rem;
+      color: #888;
+      margin-top: 8px;
+    }
+    .compare-box dd {
+      font-size: 0.92rem;
+      color: #1a1a2e;
+      margin-left: 0;
+    }
+    .highlight-box {
+      background: #f0fff4;
+      border: 1.5px solid #34a853;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 0.92rem;
+      color: #1a4a2e;
+    }
+    .highlight-box strong { color: #34a853; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>모바일 라이선스 인증 방식</h1>
+  <p class="subtitle">작성일: 2026-03-28 &nbsp;|&nbsp; 프로젝트: MifareTool / TMRCardNeo (Flutter)</p>
+
+  <!-- Q&A: deviceFingerprint란? -->
+  <h2>Q&amp;A — deviceFingerprint란?</h2>
+
+  <div class="qa-block">
+    <div class="qa-q">모바일 deviceFingerprint가 뭔가요?</div>
+    <div class="qa-a">
+      <p>PC에서 CPU ID를 읽어 기기를 식별하는 것처럼, <strong>모바일에서도 기기를 고유하게 식별할 수 있는 값</strong>입니다.</p>
+
+      <div class="compare-grid">
+        <div class="compare-box">
+          <div class="cb-label">PC</div>
+          <dl>
+            <dt>고유값 원본</dt>
+            <dd>Win32_Processor.ProcessorId<br><span style="color:#888;font-size:0.85rem">(CPU ID, WMI로 읽음)</span></dd>
+            <dt>최종 fingerprint</dt>
+            <dd><code>SHA256(uuid | cpuId | salt)</code></dd>
+          </dl>
+        </div>
+        <div class="compare-box mobile">
+          <div class="cb-label">모바일 (Android)</div>
+          <dl>
+            <dt>고유값 원본</dt>
+            <dd>androidId<br><span style="color:#888;font-size:0.85rem">(Android가 부여한 고유 ID)</span></dd>
+            <dt>최종 fingerprint</dt>
+            <dd><code>SHA256(androidId | model | salt)</code></dd>
+          </dl>
+        </div>
+      </div>
+
+      <p style="margin-top:4px"><strong>androidId란?</strong><br>
+      Android가 <strong>최초 부팅 시 자동 생성</strong>해서 기기에 저장하는 16자리 hex 문자열입니다.</p>
+      <pre style="margin:10px 0">예: a1b2c3d4e5f60718</pre>
+      <ul class="check-list" style="margin-bottom:12px">
+        <li>앱을 삭제·재설치해도 <strong>유지됨</strong></li>
+        <li>factory reset(기기 초기화) 시 변경됨 — PC도 메인보드 교체 시 CPU ID 바뀌는 것과 동일한 수준</li>
+      </ul>
+
+      <p><strong>왜 SHA256으로 한 번 더 변환하나요?</strong><br>
+      androidId 하나만 쓰면 너무 짧고 단순하니, 여러 값을 조합 + salt + SHA256 해시로 변환합니다.</p>
+      <div class="highlight-box">
+        <strong>SHA256</strong>("a1b2c3d4e5f60718 | Samsung | SM-G990B | TMR_SALT")<br>
+        = <strong>"3f7a2c1b9d..."</strong> &nbsp;← 이게 deviceFingerprint
+      </div>
+      <p style="color:#555;font-size:0.9rem">이 값을 PC의 <code>cpuProcessorId</code> 자리에 넣어서 license.dat을 만들면,<br>
+      앱 실행 시 현재 기기의 fingerprint와 일치하는지 검증합니다.</p>
+
+      <p style="margin-top:12px;padding:10px 14px;background:#fffbe6;border-left:4px solid #f7c94f;border-radius:0 6px 6px 0;font-size:0.92rem">
+        <strong>한 줄 요약:</strong> PC의 "CPU ID"에 해당하는 모바일 기기 고유 식별값입니다.
+      </p>
+    </div>
+  </div>
+
+  <!-- 전체 흐름 -->
+  <h2>전체 흐름 한눈에 보기</h2>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="flow-box user">
+        <div class="role">사용자 (앱)</div>
+        앱 설치 후 첫 실행<br>
+        → 기기 ID (deviceFingerprint) 화면에 표시
+      </div>
+      <div class="flow-arrow"></div>
+      <div class="flow-box admin">
+        <div class="role">관리자 (PC)</div>
+        &nbsp;
+      </div>
+    </div>
+    <div class="flow-row"><div class="flow-connector">↓</div></div>
+    <div class="flow-row">
+      <div class="flow-box user">
+        <div class="role">사용자 (앱)</div>
+        기기 ID를 카카오톡·문자 등으로<br>관리자에게 전달
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box admin">
+        <div class="role">관리자 (PC)</div>
+        MifareTool에 기기 ID 입력<br>
+        → license.dat 생성
+      </div>
+    </div>
+    <div class="flow-row"><div class="flow-connector">↓</div></div>
+    <div class="flow-row">
+      <div class="flow-box user">
+        <div class="role">사용자 (앱)</div>
+        license.dat 파일 수신<br>
+        → 앱에서 불러오기 → 인증 성공
+      </div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-box admin">
+        <div class="role">관리자 (PC)</div>
+        license.dat를 카카오톡·이메일 등으로<br>사용자에게 전달
+      </div>
+    </div>
+  </div>
+
+  <!-- 단계별 상세 -->
+  <h2>단계별 상세 설명</h2>
+
+  <!-- 1단계 -->
+  <div class="step-card">
+    <span class="step-num">1단계 — 사용자: 앱 첫 실행</span>
+    <p>앱을 설치하고 실행하면 <strong>인증 화면</strong>이 표시됩니다. 기기 ID를 복사해서 관리자에게 전달합니다.</p>
+    <div class="mock">┌─────────────────────────────┐
+│  라이선스 인증이 필요합니다   │
+│                             │
+│  기기 ID:                   │
+│  3f7a2c1b9d4e8f2a...        │  ← deviceFingerprint
+│                             │
+│  [복사]  [관리자에게 전달]   │
+└─────────────────────────────┘</div>
+  </div>
+
+  <!-- 2단계 -->
+  <div class="step-card admin">
+    <span class="step-num">2단계 — 관리자: license.dat 생성 (PC MifareTool)</span>
+    <p>관리자는 받은 기기 ID를 MifareTool에 입력해서 license.dat를 만듭니다.</p>
+    <div class="mock">┌─────────────────────────────┐
+│  [모바일 라이선스 생성]       │
+│                             │
+│  고객명: OO기관              │
+│  기기 ID: 3f7a2c1b9d...     │  ← 사용자가 보내준 값 입력
+│  만료일: 2027-01-01          │
+│                             │
+│  [license.dat 생성]         │
+└─────────────────────────────┘</div>
+    <p style="margin-top:12px">생성된 license.dat 내부 구조 (JSON):</p>
+    <pre><span class="json-key">"ver"</span>: <span class="json-num">1</span>,
+<span class="json-key">"alg"</span>: <span class="json-str">"RSA-SHA256"</span>,
+<span class="json-key">"payload_b64"</span>: <span class="json-str">"eyJwcm9kdWN0IjoiVE1S..."</span>,   <span style="color:#6a8f6a">// Base64(JSON payload)</span>
+<span class="json-key">"sig_b64"</span>: <span class="json-str">"Xk92mN3pQ..."</span>              <span style="color:#6a8f6a">// RSA-SHA256 서명</span></pre>
+    <p>payload 내부:</p>
+    <pre><span class="json-key">"product"</span>: <span class="json-str">"TMRCardNeo"</span>,
+<span class="json-key">"customer"</span>: <span class="json-str">"OO기관"</span>,
+<span class="json-key">"deviceBind"</span>: {
+  <span class="json-key">"deviceId"</span>: <span class="json-str">"3f7a2c1b9d4e8f2a..."</span>   <span style="color:#6a8f6a">// SHA256 fingerprint</span>
+},
+<span class="json-key">"expiresAtUtc"</span>: <span class="json-str">"2027-01-01T00:00:00Z"</span></pre>
+  </div>
+
+  <!-- 3단계 -->
+  <div class="step-card admin">
+    <span class="step-num">3단계 — 관리자 → 사용자: 파일 전달</span>
+    <p>license.dat를 사용자에게 전달하는 방법:</p>
+    <table>
+      <tr><th>방법</th><th>장점</th><th>단점</th></tr>
+      <tr><td>카카오톡 파일 전송</td><td>가장 간편</td><td>—</td></tr>
+      <tr><td>이메일 첨부</td><td>기록 남음</td><td>—</td></tr>
+      <tr><td>QR코드로 변환</td><td>파일 없이 스캔만으로 인증</td><td>추가 구현 필요</td></tr>
+    </table>
+  </div>
+
+  <!-- 4단계 -->
+  <div class="step-card">
+    <span class="step-num">4단계 — 사용자: 앱에서 license.dat 불러오기</span>
+    <div class="mock">┌─────────────────────────────┐
+│  라이선스 파일을 선택하세요   │
+│                             │
+│  [파일 선택]                 │  ← 카카오톡으로 받은 파일 선택
+│                             │
+│  ✅ 인증 성공               │
+│  고객: OO기관               │
+│  만료: 2027-01-01           │
+└─────────────────────────────┘</div>
+  </div>
+
+  <!-- 5단계 -->
+  <div class="step-card">
+    <span class="step-num">5단계 — 앱 내부: 검증 로직</span>
+    <p>앱이 license.dat를 받으면 PC와 동일한 방식으로 3가지를 순서대로 검증합니다:</p>
+    <ul class="check-list">
+      <li>서명 검증: RSA-SHA256(payload, public_key.pem) → 위변조 확인</li>
+      <li>기기 바인딩: payload의 deviceId == 현재 기기 fingerprint 일치 확인</li>
+      <li>만료일 확인: expiresAtUtc &gt; 현재 시각</li>
+    </ul>
+    <p style="margin-top:8px;color:#555;font-size:0.9rem">세 가지 모두 통과해야 인증 성공.</p>
+  </div>
+
+  <!-- 재실행 -->
+  <h2>한 번 인증 후에는?</h2>
+  <div class="step-card">
+    <p>앱 내부 저장소에 license.dat를 보관합니다.</p>
+    <ul class="check-list">
+      <li>이후 실행 시 자동으로 저장된 파일로 검증</li>
+      <li>만료일까지 별도 인증 불필요</li>
+      <li>기기 초기화(factory reset) 시 기기 ID 변경 → 재발급 필요</li>
+    </ul>
+  </div>
+
+  <!-- PC vs 모바일 비교 -->
+  <h2>PC vs 모바일 비교</h2>
+  <table>
+    <tr><th></th><th>PC 프로그램</th><th>모바일 앱 (Flutter)</th></tr>
+    <tr><td>기기 고유값</td><td>Win32_Processor.ProcessorId (CPU ID)</td><td>androidId + 모델명 등 조합</td></tr>
+    <tr><td>fingerprint 생성</td><td>SHA256(uuid | cpuId | salt)</td><td>SHA256(androidId | model | salt)</td></tr>
+    <tr><td>서명 알고리즘</td><td>RSA-2048 / SHA256 / PKCS#1</td><td>동일</td></tr>
+    <tr><td>라이선스 파일</td><td>license.dat (JSON)</td><td>동일</td></tr>
+    <tr><td>공개키</td><td>public_key.pem (내장 + 외부 파일)</td><td>public_key.pem (assets 내장)</td></tr>
+    <tr><td>파일 전달</td><td>USB / 파일 복사</td><td>카카오톡 / 이메일 / QR코드</td></tr>
+  </table>
+
+  <!-- 요약 -->
+  <div class="summary">
+    <h2>한 줄 요약</h2>
+    <div class="summary-flow">
+      <span class="sf-item">사용자가 기기 ID 전달</span>
+      <span class="sf-arrow">→</span>
+      <span class="sf-item">관리자가 license.dat 생성</span>
+      <span class="sf-arrow">→</span>
+      <span class="sf-item">카카오톡 등으로 파일 전달</span>
+      <span class="sf-arrow">→</span>
+      <span class="sf-item">앱에서 한 번 불러오면 인증 완료</span>
+    </div>
+    <p style="margin-top:14px;color:#7a4800">PC 방식과 완전히 동일한 구조이며, 달라지는 건 <strong>"CPU ID" 대신 "기기 fingerprint"</strong> 하나뿐입니다.</p>
+  </div>
+
+</div>
+</body>
+</html>
